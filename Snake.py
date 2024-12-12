@@ -1,8 +1,7 @@
 import sys
 import pygame
 import random
-import queue
-
+from collections import deque
 # COLORS
 black = (0, 0, 0)
 gray = (128, 128, 128)
@@ -30,11 +29,13 @@ head = pygame.Rect(width / 2, (height + dashboard_height) / 2, 10, 10)  # Snake 
 generate_new_food = True
 good_food = None  #Rect for good food
 bad_food = None  #Rect for bad food
-gained_score = None
-score = 0  #Initial score
+gained_score = False
+lost_score = False
+score = 1  #Initial score
 time = 0
 time_limit = 400
-snake_body = queue.Queue()
+snake_body = deque()
+
 
 # MAIN GAME LOOP
 while True:
@@ -43,20 +44,21 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit(0)
-        elif event.type == pygame.MOUSEBUTTONDOWN:  # Mouse click event
-            mouse_x, mouse_y = event.pos  # Get mouse click coordinates
-            # Check which region the click is in relative to the snake's head
-            if mouse_x < head.x and abs(mouse_x - head.x) > abs(mouse_y - head.y):  # Click to the left
+            
+            # Handle events
+        elif event.type == pygame.KEYDOWN:  # Key press event
+            if event.key == pygame.K_LEFT:  # Left arrow key
                 current_speed = [-10, 0]  # Move left
-            elif mouse_x > head.x + head.width and abs(mouse_x - head.x) > abs(mouse_y - head.y):  # Click to the right
+            elif event.key == pygame.K_RIGHT:  # Right arrow key
                 current_speed = [10, 0]  # Move right
-            elif mouse_y < head.y:  # Click above
+            elif event.key == pygame.K_UP:  # Up arrow key
                 current_speed = [0, -10]  # Move up
-            elif mouse_y > head.y + head.height:  # Click below
+            elif event.key == pygame.K_DOWN:  # Down arrow key
                 current_speed = [0, 10]  # Move down
 
+
     # Check game over condition
-    if score < 0:
+    if score <= 0:
         font = pygame.font.SysFont(None, 48)
         game_over_text = font.render("GAME OVER", True, red)
         screen.fill(black)
@@ -67,7 +69,7 @@ while True:
         continue
 
     # Check win condition
-    if score >= 150:
+    if score >= 100:
         font = pygame.font.SysFont(None, 48)
         win_text = font.render("YOU WON", True, green)
         screen.fill(black)
@@ -81,52 +83,72 @@ while True:
     # Generate food if needed
     if generate_new_food:
         food_size = 10
-        random_x_good = random.randint(0, width - food_size)
-        random_y_good = random.randint(dashboard_height, height - food_size)
+        random_x_good = random.randint(0, (width - food_size) // 10) * 10
+        random_y_good = random.randint(dashboard_height // 10, (height - food_size) // 10) * 10
+
         good_food = pygame.Rect(random_x_good, random_y_good, food_size, food_size)
 
-        random_x_bad = random.randint(0, width - food_size)
-        random_y_bad = random.randint(dashboard_height, height - food_size)
+        random_x_bad = random.randint(0, (width - food_size) // 10) * 10
+        random_y_bad = random.randint(dashboard_height // 10, (height - food_size) // 10) * 10
+
         bad_food = pygame.Rect(random_x_bad, random_y_bad, food_size, food_size)
 
         time = 0
         generate_new_food = False
-        if gained_score and score % 10 == 0:
-            FPS = min(25,FPS+speed_increment)
-            time_limit = max(200, time_limit - 2) 
+
 
     # Move the snake's head
     head = head.move(current_speed)
 
     if head.left < 0:  # Move from left to right
-        head.left = width
+        head.left = width - 10
     elif head.right > width:  # Move from right to left
-        head.right = 0
+        head.right = 10
     if head.top < dashboard_height:  # Move from top to bottom
         head.top = height
     elif head.bottom > height:  # Move from bottom to top
-        head.bottom = dashboard_height
+        head.bottom = dashboard_height + 10
     
     # Check collision with good food
     if head.colliderect(good_food):
-        score += 5 
+        score += 1
+        # Lengthen snakes body
         generate_new_food = True 
         gained_score = True
 
     # Check collision with bad food
     if head.colliderect(bad_food):
-        score -= 15 
+        score -= 1 
         generate_new_food = True
+        if score>0:
+            snake_body.pop()
+        lost_score=True
 
+    if score == 0:
+        continue
+
+    # Check collision with snake body
+    if any(head.colliderect(segment) for segment in snake_body):
+        score = -1
     # DRAWING
     screen.fill(black)
     pygame.draw.line(screen, white, (0, dashboard_height), (width, dashboard_height))
-    pygame.draw.rect(screen, blue, head)  #Snake head
+    # pygame.draw.rect(screen, blue, head)  #Snake head
+
+    # drawing snakes body
+    snake_body.appendleft(head)
+    for square in snake_body:
+        pygame.draw.rect(screen, blue, square)
+
     if good_food:
         pygame.draw.rect(screen, bright_violet, good_food)  #Draw good food
     if bad_food:
         pygame.draw.rect(screen, green, bad_food)  #Draw bad food
-
+    
+    if not gained_score and not lost_score:
+        snake_body.pop()
+    gained_score = False
+    lost_score = False
     # Display score
     font = pygame.font.SysFont(None, 36)
     score_text = font.render(f"Life points: {score}", True, white)
