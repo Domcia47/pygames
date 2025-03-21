@@ -1,0 +1,52 @@
+WELCOME TO THE GAME OF LIFE
+
+The Game of Life is a cellular automaton devised by mathematician John Conway. It is a zero-player game where the evolution of the board depends on its initial state and a set of rules.
+
+The rules of the game according to Conway:
+
+- A dead cell with exactly 3 live neighbors becomes alive in the next time step (is "born").
+- A live cell with 2 or 3 live neighbors remains alive; with any other number of neighbors, it dies (from "loneliness" or "overcrowding").
+
+VERSIONS:
+Python 3.11.7
+Pygame 2.2.0
+
+USAGE:
+
+In command line type: 
+
+
+python GoL_start.py
+
+
+You can run the program without any command line arguments - a main manu is opened then.
+
+You can run with a text file as argument e.g.
+
+
+python GoL_start.py pulsar.txt
+
+
+The file will be read in and the program will start automatically in the Draw board mode.
+
+IN MAIN MENU:
+
+You can choose 2 modes:
+
+1. Draw board:
+In this mode you are drawing cells by clicking on the screen - if you click on a dead cell (black) it becomes a living cell (white) and if you click on a living cell it becomes a dead cell.
+
+If you're ready - click ENTER.
+
+Your board will be saved in cells.txt file.
+
+2. Random board
+In this mode the board is randomly generated and the game starts automatically.
+
+
+THE GAME:
+
+After choosing the board you can observe life of the cells. It will work by itself from now, but there's an additional functionality - you can still click on the board and change the state of each cell similarily to the draw mode.
+
+
+HAVE FUN!
